@@ -1,0 +1,54 @@
+Department:
+LOAD
+    DeptID,
+    Department
+FROM [lib://DataFiles/DepartmentStat.txt]
+(txt, utf8, embedded labels, delimiter is '\t', msq);
+
+SalesPersonDyn:
+load
+//Date(FromDate,'mm/dd/yyyy')&'|'&Date(ToDate,'mm/dd/yyyy') as Period_Interval,
+SPID,
+FromDate,
+ToDate,
+DeptID,
+Duration;
+LOAD
+    FromDate,
+    ToDate,
+    Duration,
+    DeptID,
+    SPID
+FROM [lib://DataFiles/SalespeopleDyn.txt]
+(txt, utf8, embedded labels, delimiter is '\t', msq);
+
+SalesPersonStat:
+LOAD
+    SPID,
+    Salesperson
+FROM [lib://DataFiles/SalespeopleStat.txt]
+(txt, utf8, embedded labels, delimiter is '\t', msq);
+
+Transaction:
+load 
+TransactionDate,
+Amount,
+ProductID,
+SPID;
+LOAD
+    TransactionID,
+    Amount,
+    ProductID,
+    SPID,
+    TransactionDate
+FROM [lib://DataFiles/Transctions.txt]
+(txt, utf8, embedded labels, delimiter is '\t', msq);
+
+left join(SalesPersonDyn)
+//Bridge:
+IntervalMatch(TransactionDate,SPID)
+Load
+FromDate,
+ToDate,
+SPID
+Resident SalesPersonDyn;

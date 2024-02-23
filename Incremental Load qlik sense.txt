@@ -1,0 +1,63 @@
+Full Load:
+Order:
+LOAD
+    order_id,
+    qty,
+    sales,
+    date_up
+FROM [lib://DataFiles/Shadow Incremental Load.xlsx]
+(ooxml, embedded labels, table is Sheet1);
+
+store Order into [lib://DataFiles/shadow_Incremental_Load.qvd](qvd);
+
+
+SortOrder:
+NoConcatenate
+load
+max(date_up)
+from [lib://DataFiles/Shadow Incremental Load.qvd](qvd);
+
+let vUpdated_Date=peek('max_date',-1,SortOrder);
+
+Drop table SortOrder;
+exit script;
+
+Insert,modify and delete
+Order:
+LOAD
+    order_id,
+    qty,
+    sales,
+    date_up
+FROM [lib://DataFiles/Shadow Incremental Load.xlsx]
+(ooxml, embedded labels, table is Sheet1)
+where num(date_up)>num($(vUpdated_Date));
+Concatenate(Order)
+LOAD
+    order_id,
+    qty,
+    sales,
+    date_up
+FROM [lib://DataFiles/shadow_Incremental_Load.qvd]
+(qvd)
+where not exists(order_id);
+Inner Join(Order)
+LOAD
+    order_id
+FROM [lib://DataFiles/Shadow Incremental Load.xlsx]
+(ooxml, embedded labels, table is Sheet1);
+
+store Order into [lib://DataFiles/shadow_Incremental_Load.qvd](qvd);
+
+SortOrder:
+NoConcatenate
+load
+date_up
+Resident Order
+order by date_up;
+
+let vUpdated_Date=peek('date_up',-1,SortOrder);
+
+Drop table SortOrder;
+exit script;
+

@@ -1,0 +1,20 @@
+Data1:
+Mapping LOAD
+    "Emp Name",
+    Country
+FROM [lib://DataFiles/Siraj Assignment 11 Aug 2021.xlsx]
+(ooxml, embedded labels, table is Data1);
+
+Data2:
+Mapping LOAD
+    Emp,
+    Country
+FROM [lib://DataFiles/Siraj Assignment 11 Aug 2021.xlsx]
+(ooxml, embedded labels, table is [Data 2]);
+Transaction:
+LOAD
+    Employee,
+    ApplyMap('Data1',Employee,ApplyMap('Data2',Employee,'NA')) as Country,
+    Sales
+FROM [lib://DataFiles/Siraj Assignment 11 Aug 2021.xlsx]
+(ooxml, embedded labels, table is [Transaction Table]);

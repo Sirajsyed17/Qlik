@@ -1,0 +1,41 @@
+Min_Max:
+Load 
+Min(OrderDate) as Min_Date,
+Max(OrderDate) as Max_Date
+Resident Data;
+
+let vMinDate=num(peek('Min_Date',0,'Min_Max'));
+let vMaxDate=num(Peek('Max_Date',0,'Min_Max'));
+
+temp:
+Load
+$(vMinDate)+IterNo()-1 as OrderDate
+AutoGenerate 1
+while($(vMinDate)+IterNo()-1)<=$(vMaxDate);
+
+Master_Calender:
+Load
+OrderDate,
+Date(MonthStart(OrderDate),'YYYY-MM') as YearMonth
+Resident temp
+Order by OrderDate asc;
+drop table temp;
+drop table Min_Max;
+
+tmpAsOfCalendar:
+Load distinct YearMonth
+  Resident Master_Calender;
+  
+Join (tmpAsOfCalendar)
+Load YearMonth as AsOfMonth
+  Resident tmpAsOfCalendar ;
+
+[As-Of Calendar]:
+Load YearMonth,
+  AsOfMonth,
+  Round((AsOfMonth-YearMonth)*12/365.2425) as MonthDiff,
+  Year(AsOfMonth)-Year(YearMonth) as YearDiff
+  Resident tmpAsOfCalendar
+      Where AsOfMonth >= YearMonth;
+
+Drop Table tmpAsOfCalendar;

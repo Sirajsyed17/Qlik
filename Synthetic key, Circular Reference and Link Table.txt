@@ -1,0 +1,115 @@
+---------------------------Qualify and UnQualify----------------------------
+Qualify*;
+Table1:
+Unqualify SupplierID;
+LOAD
+    SupplierID,
+    CompanyName,
+    Contact,
+    Name
+FROM [lib://Qlik Connection/Circular Reference.xlsx]
+(ooxml, embedded labels, table is Table1);
+
+Unqualify ProductID,SupplierID;
+Table2:
+LOAD
+    ProductID,
+    ProductName,
+    SupplierID
+FROM [lib://Qlik Connection/Circular Reference.xlsx]
+(ooxml, embedded labels, table is Table2);
+
+Unqualify ProductID;
+Table3:
+LOAD
+    ProductID,
+    Name
+FROM [lib://Qlik Connection/Circular Reference.xlsx]
+(ooxml, embedded labels, table is Table3);
+Unqualify*;
+
+----------------------Link Table-------------------------------------------
+Qualify*;
+Table1:
+Unqualify SupplierID;
+LOAD
+    SupplierID,
+    CompanyName,
+    Contact,
+    Name
+FROM [lib://Qlik Connection/Circular Reference.xlsx]
+(ooxml, embedded labels, table is Table1);
+
+Unqualify ProductID,SupplierID;
+Table2:
+LOAD
+    ProductID,
+    ProductName,
+    SupplierID
+FROM [lib://Qlik Connection/Circular Reference.xlsx]
+(ooxml, embedded labels, table is Table2);
+
+Unqualify ProductID;
+Table3:
+LOAD
+    ProductID,
+    Name
+FROM [lib://Qlik Connection/Circular Reference.xlsx]
+(ooxml, embedded labels, table is Table3);
+Unqualify*;
+
+---------------------Link Table with 3 tables---------------------------
+Table1:
+LOAD
+    SupplierID&'|'&ProductID as Key,
+    SupplierID,
+    CompanyName,
+    Contact,
+    ProductID
+FROM [lib://DataFiles/SyntheticData.xlsx]
+(ooxml, embedded labels, table is Table1);
+
+Table2:
+LOAD
+    SupplierID&'|'&ProductID as Key,
+    ProductID,
+    ProductName,
+    SupplierID
+FROM [lib://DataFiles/SyntheticData.xlsx]
+(ooxml, embedded labels, table is Table2);
+
+Table3:
+LOAD
+	SupplierID&'|'&ProductID as Key,
+    ProductID,
+    SupplierID,
+    Name
+FROM [lib://DataFiles/SyntheticData.xlsx]
+(ooxml, embedded labels, table is Table3);
+
+link_table:
+load
+distinct SupplierID&'|'&ProductID as Key,
+ProductID,
+SupplierID
+resident Table1;
+link_table:
+load
+distinct SupplierID&'|'&ProductID as Key,
+ProductID,
+SupplierID
+resident Table2;
+link_table:
+load
+distinct SupplierID&'|'&ProductID as Key,
+ProductID,
+SupplierID
+resident Table3;
+
+drop field SupplierID,ProductID from Table1;
+drop field SupplierID,ProductID from Table2;
+drop field SupplierID,ProductID from Table3;
+    
+
+
+ 

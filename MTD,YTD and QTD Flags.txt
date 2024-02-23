@@ -1,0 +1,54 @@
+-----------MTD,YTD and QTD Flags--------------------------------------------
+MinMax:
+LOAD
+Min("order_creation_date") as MinDate,
+Max("order_creation_date") as MaxDate
+RESIDENT [SALES_ORDER_KEY];
+​
+LET vMinDate = Num(Peek('MinDate', 0, 'MinMax'));
+LET vMaxDate = Num(Peek('MaxDate', 0, 'MinMax'));
+​
+LET vToday = $(vMaxDate);
+​
+//LET vToday = Num(Today(0));
+/*************** Temporary Calendar *************
+Generates a single table with one field containing
+all existing dates between MinDate and MaxDate.
+*/
+//
+TempCal:
+LOAD
+date($(vMinDate) + rowno() - 1) AS TempDate
+AUTOGENERATE
+$(vMaxDate) - $(vMinDate) +1;
+DROP TABLE MinMax;
+/*************** Master Calendar ***************
+Disconnected during the Date Island exercise by renaming TempDate as IslandDate
+*/
+OrderCalendar:
+LOAD
+// TempDate AS CalDate,
+TempDate AS order_creation_date,
+'Week-' & Week(TempDate) AS WeekDesc,
+Year(TempDate)*12+num(month(TempDate)) as MonthID,
+Yearname(Date(Date#(Year(TempDate)*100+Month(TempDate),'YYYYMM'),'MMM-YYYY'),0,10) as SE,
+Year(TempDate) AS Year,
+Month(TempDate) AS Month,
+Day(TempDate) AS Day,
+Weekday(TempDate) AS WeekDay,
+'Q' & ceil(month(TempDate) / 3) AS Quarter,
+makedate(year(TempDate),month(TempDate)) as MonthStartdate,
+date(rangemin(dayname(monthend(TempDate)),today())) as MonthEnddate , //Creating the field MonthEndDate
+Date(monthstart(TempDate), 'MMM-YY') AS MonthYear,
+Week(TempDate)&'-'&Year(TempDate) AS WeekYear,
+​
+InWeekToDate(TempDate, $(vToday), 0) * -1 AS CurWTDFlag,
+InWeekToDate(TempDate, $(vToday), -1) * -1 AS PrWTDFlag,
+InMonthToDate(TempDate, $(vToday), 0) * -1 AS CurMTDFlag,
+if (TempDate >= monthstart($(vToday),-1) and TempDate <= monthstart($(vToday),-1)+ $(vToday)-monthstart($(vToday)) ,1,0) as PrMTDFlag,  //Prior Month Flag
+inyeartodate(TempDate, $(vToday), 0) * -1 AS CurYTDFlag,
+if (TempDate >= YearStart($(vToday),-1) and TempDate <= YearStart($(vToday),-1)+ $(vToday)-YearStart($(vToday)) ,1,0) as PrYTDFlag,  //Prior Year Flag
+InQuarterToDate(TempDate, $(vToday), 0) * -1 AS CurQTDFlag,                                                                   
+if (TempDate >= QuarterStart($(vToday),-1) and TempDate <= Quarterstart($(vToday),-1)+ $(vToday)-QuarterStart($(vToday)) ,1,0) as PrQTDFlag  // Prior Quarter Flag
+resident TempCal;
+drop table TempCal;

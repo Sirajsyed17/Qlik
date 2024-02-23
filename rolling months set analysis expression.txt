@@ -1,0 +1,2 @@
+Rolling Months Set analysis expression
+=Sum({<MonthYear={">=$(=Date(AddMonths(Max(MonthYear),-11),'YYYY-MM'))<=$(=Max(MonthYear))"}>}Sales)
